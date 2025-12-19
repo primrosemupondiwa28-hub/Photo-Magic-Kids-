@@ -1,38 +1,22 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StoryPage } from "../types";
 
-export const getStoredApiKey = (): string | null => {
-  return localStorage.getItem('gemini_api_key') || process.env.API_KEY || null;
-};
-
-export const setStoredApiKey = (key: string) => {
-  localStorage.setItem('gemini_api_key', key);
-};
-
-export const removeStoredApiKey = () => {
-  localStorage.removeItem('gemini_api_key');
-};
-
-const getAiClient = () => {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
-    throw new Error("API Key missing. Please add your Google Gemini API Key in settings.");
+// Helper to check if a key is available
+export const hasApiKey = async (): Promise<boolean> => {
+  if (typeof window !== 'undefined' && (window as any).aistudio?.hasSelectedApiKey) {
+    return await (window as any).aistudio.hasSelectedApiKey();
   }
-  return new GoogleGenAI({ apiKey });
+  return !!process.env.API_KEY;
 };
 
-export const validateApiKey = async (apiKey: string): Promise<boolean> => {
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: 'test',
-    });
+// Helper to open the selection dialog
+export const openKeySelector = async () => {
+  if (typeof window !== 'undefined' && (window as any).aistudio?.openSelectKey) {
+    await (window as any).aistudio.openSelectKey();
+    // After triggering, we proceed assuming success as per guidelines
     return true;
-  } catch (e) {
-    console.error("API Key validation failed", e);
-    return false;
   }
+  return false;
 };
 
 export const generateMagicPhoto = async (
@@ -40,24 +24,26 @@ export const generateMagicPhoto = async (
   prompt: string,
   mimeType: string = 'image/jpeg'
 ): Promise<string> => {
-  const ai = getAiClient();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const enhancedPrompt = `${prompt}
   
   STRICT IDENTITY PROTOCOL (MANDATORY):
   1. ABSOLUTE FACE MATCH: The generated child MUST be a 1:1 likeness of the child in the reference photo. 
-  2. HAIR CONSISTENCY: Match the EXACT length, texture, and style of the hair in the photo. DO NOT change it.
-  3. SKIN TONE LOCK: Use the EXACT luminosity from the photo's highlights. This child has a FAIR, LIGHT-Mixed complexion. DO NOT add extra melanin. Use "Golden-Ivory" and "Light-Beige" tones.
-  4. NO ETHNIC DRIFT: Do not alter facial features to fit a generic racial archetype. Keep the specific eye shape and features from the photo.
-  5. RECOGNIZABILITY: The child must be instantly recognizable as the specific individual in the source photo.`;
+  2. HAIR CONSISTENCY: Match the EXACT length, texture, and style of the hair in the photo. 
+  3. SKIN TONE LOCK: Use the EXACT luminosity from the photo's highlights. Maintain the fair/light complexion.
+  4. RECOGNIZABILITY: The child must be instantly recognizable as the specific individual in the source photo.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
+    model: 'gemini-3-pro-image-preview',
     contents: {
       parts: [
         { text: enhancedPrompt },
         { inlineData: { mimeType, data: base64Image } }
       ]
+    },
+    config: {
+      imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
     }
   });
 
@@ -77,11 +63,11 @@ export const generateStory = async (
   ageGroup: string,
   theme: string
 ): Promise<StoryPage[]> => {
-  const ai = getAiClient();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `Write a children's story for a ${ageGroup} named ${name}. Theme: ${theme}. 6 pages. Return JSON.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -110,19 +96,16 @@ export const generateIllustration = async (
   mimeType: string = 'image/jpeg',
   appearanceDescription?: string
 ): Promise<string> => {
-  const ai = getAiClient();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   let fullPrompt = `High-quality 2D digital illustration for a children's book. 
   
-  CHARACTER IDENTITY ANCHOR (STRICTEST PRIORITY):
-  - This is a story about the SPECIFIC child in the attached photo. 
-  - CONSISTENCY: The face, hair, and skin tone MUST be identical on every page.
-  - HAIR: Match the EXACT length and texture from the photo. Do not change the hairstyle.
-  - SKIN TONE: Use a FAIR, LIGHT-GOLDEN Mixed complexion. DO NOT DARKEN. Use high-luminosity highlights matching the photo's forehead. 
-  - NO GENERIC ARCHETYPES: Avoid defaulting to generic racial features. Stick to the 1:1 facial structure of the child in the image.
-  - STYLE: Keep the art style consistent (vibrant, clean 2D).
+  CHARACTER IDENTITY ANCHOR:
+  - This is the SPECIFIC child in the attached photo. 
+  - CONSISTENCY: Face, hair, and skin tone MUST be identical to the photo.
+  - STYLE: Vibrant, clean 2D children's book style.
 
-  SCENE DESCRIPTION: ${prompt}`;
+  SCENE: ${prompt}`;
 
   if (appearanceDescription) {
       fullPrompt += `\n\nUSER-SPECIFIED CONSTANTS: ${appearanceDescription}`;
@@ -134,8 +117,11 @@ export const generateIllustration = async (
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: { parts: parts }
+    model: 'gemini-3-pro-image-preview',
+    contents: { parts: parts },
+    config: {
+      imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+    }
   });
 
   if (response.candidates?.[0]?.content?.parts) {
@@ -154,19 +140,21 @@ export const generateColoringPage = async (
   mimeType: string = 'image/jpeg',
   appearanceDescription?: string
 ): Promise<string> => {
-  const ai = getAiClient();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   let fullPrompt = `Clean black and white line art coloring page. Bold outlines, pure white background. ${prompt}`;
-  if (appearanceDescription) fullPrompt += ` Specific character features to maintain: ${appearanceDescription}.`;
+  if (appearanceDescription) fullPrompt += ` Specific character features: ${appearanceDescription}.`;
   
   const parts: any[] = [{ text: fullPrompt }];
   if (base64Image) {
     parts.push({ inlineData: { mimeType, data: base64Image } });
-    parts[0].text += " Use the photo as the SOLE reference for facial features and hair length.";
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: { parts }
+    model: 'gemini-3-pro-image-preview',
+    contents: { parts },
+    config: {
+      imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+    }
   });
 
   if (response.candidates?.[0]?.content?.parts) {
@@ -185,19 +173,20 @@ export const generateSticker = async (
     mimeType: string = 'image/jpeg',
     appearanceDescription?: string
   ): Promise<string> => {
-    const ai = getAiClient();
-    let fullPrompt = `Die-cut sticker on white background. Style: ${prompt}.
-    STRICT IDENTITY: Maintain the exact fair skin tone and hairstyle from the photo. Zero alteration to race or features.`;
-
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    let fullPrompt = `Die-cut sticker on white background. Style: ${prompt}.`;
     if (appearanceDescription) fullPrompt += `\nCharacter Description: ${appearanceDescription}`;
   
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-3-pro-image-preview',
       contents: {
         parts: [
           { text: fullPrompt },
           { inlineData: { mimeType, data: base64Image } }
         ]
+      },
+      config: {
+        imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
       }
     });
   

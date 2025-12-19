@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Character, Ethnicity, ArtStyle, Theme } from '../types';
 import { CHARACTERS_LIST, ETHNICITIES_LIST, ART_STYLES_LIST, CHARACTER_LOCATIONS, CHARACTER_POSES, THEMES_DATA } from '../constants';
-import { generateMagicPhoto, getStoredApiKey } from '../services/gemini';
+// Fix: Use hasApiKey instead of getStoredApiKey
+import { generateMagicPhoto, hasApiKey } from '../services/gemini';
 
 const INSPIRATION_PROMPTS = [
   "Wearing a golden crown 👑",
@@ -58,8 +59,9 @@ const PhotoMagic: React.FC<PhotoMagicProps> = ({ onOpenSettings }) => {
   const handleGenerate = async () => {
     if (!imagePreview) return;
     
-    // Check API Key
-    if (!getStoredApiKey()) {
+    // Fix: Check API Key using hasApiKey and await the response
+    const keySet = await hasApiKey();
+    if (!keySet) {
         onOpenSettings();
         return;
     }

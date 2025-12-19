@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AgeGroup, StoryPage } from '../types';
-import { generateStory, generateIllustration, generateColoringPage, getStoredApiKey } from '../services/gemini';
+// Fix: Use hasApiKey instead of getStoredApiKey
+import { generateStory, generateIllustration, generateColoringPage, hasApiKey } from '../services/gemini';
 
 interface StoryCreatorProps {
     onOpenSettings: () => void;
@@ -42,7 +43,9 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
   const handleCreate = async () => {
     if (!name || !theme) return;
 
-    if (!getStoredApiKey()) {
+    // Fix: Check API Key using hasApiKey and await the response
+    const keySet = await hasApiKey();
+    if (!keySet) {
         onOpenSettings();
         return;
     }

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { generateSticker, getStoredApiKey } from '../services/gemini';
+// Fix: Use hasApiKey instead of getStoredApiKey
+import { generateSticker, hasApiKey } from '../services/gemini';
 
 interface StickersPuzzlesProps {
     onOpenSettings: () => void;
@@ -75,7 +76,9 @@ const StickerMaker: React.FC<{ onOpenSettings: () => void }> = ({ onOpenSettings
   const handleGenerate = async () => {
     if (!imagePreview) return;
     
-    if (!getStoredApiKey()) {
+    // Fix: Check API Key using hasApiKey and await the response
+    const keySet = await hasApiKey();
+    if (!keySet) {
         onOpenSettings();
         return;
     }

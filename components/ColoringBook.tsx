@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { generateColoringPage, generateIllustration, getStoredApiKey } from '../services/gemini';
+// Fix: Use hasApiKey instead of getStoredApiKey
+import { generateColoringPage, generateIllustration, hasApiKey } from '../services/gemini';
 import { AgeGroup } from '../types';
 
 interface ColoringBookProps {
@@ -38,7 +39,9 @@ const ColoringBook: React.FC<ColoringBookProps> = ({ onOpenSettings }) => {
   const handleGenerateBook = async () => {
     if (!themePrompt || !imagePreview) return;
     
-    if (!getStoredApiKey()) {
+    // Fix: Check API Key using hasApiKey and await the response
+    const keySet = await hasApiKey();
+    if (!keySet) {
         onOpenSettings();
         return;
     }
