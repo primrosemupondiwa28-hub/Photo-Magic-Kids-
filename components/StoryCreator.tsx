@@ -92,20 +92,27 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
              mimeType = imagePreview.split(';')[0].split(':')[1];
         }
 
-        // Consistent character instructions to maintain identity across the whole book
-        const identityAnchor = `STRICT CHARACTER IDENTITY: This child is the SPECIFIC HERO of the story. 
-        Face & Hair: Match the photo exactly. DO NOT change hair length or texture.
-        Skin Tone: ${skinTone || 'Match photo highlights exactly (Fair/Light Mixed)'}.
-        Identity Anchor: Keep the facial structure 1:1 consistent with the source photo on every page.
-        Description: ${childDescription}`;
+        // Enhanced identity anchor specifically demanding cover-to-page consistency
+        const identityAnchor = `STRICT CHARACTER CONSISTENCY: This is the MAIN HERO. 
+        MATCH PHOTO 100%: Facial structure, eye shape, and nose must match the reference photo exactly.
+        HAIR LOCK: The hairstyle MUST be the exact length and texture as the photo. 
+        SKIN TONE: ${skinTone || 'Maintain fair/light complexion from photo highlights'}.
+        NOTES: ${childDescription}`;
 
         let image;
-        if (index === 0 && coverStyle === 'COLORING') {
-            // Generate coloring page version for cover
-            const coloringPrompt = `BOOK COVER OUTLINE: ${prompt}. Big bold outlines. Pure white background.`;
-            image = await generateColoringPage(coloringPrompt, base64Data, mimeType, identityAnchor);
+        if (index === 0) {
+            // Specialized logic for the cover (Page 0)
+            const coverLikenessPrompt = `BOOK COVER MASTERPIECE: ${prompt}. The central character MUST have an absolute face match to the provided photo.`;
+            
+            if (coverStyle === 'COLORING') {
+                const coloringPrompt = `COVER COLORING PAGE: ${coverLikenessPrompt}. Bold black outlines, pure white background, ready to be colored.`;
+                image = await generateColoringPage(coloringPrompt, base64Data, mimeType, identityAnchor);
+            } else {
+                const colorfulPrompt = `VIBRANT BOOK COVER: ${coverLikenessPrompt}. Lush colors, magical lighting, professional children's book style.`;
+                image = await generateIllustration(colorfulPrompt, base64Data, mimeType, identityAnchor);
+            }
         } else {
-            // Standard colorful illustration
+            // Standard internal story pages
             image = await generateIllustration(prompt, base64Data, mimeType, identityAnchor);
         }
         
@@ -117,7 +124,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
         });
     } catch (e) {
         console.error("Illustration failed", e);
-        alert("Magic painting hit a snag. Please try 'Redraw Page'.");
+        alert("The magic ink ran dry! Try 'Redraw Page'.");
     } finally {
         clearInterval(interval);
         setGenerationProgress(100);
@@ -173,7 +180,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
   const renderProgressBar = () => (
     <div className="w-64 mt-4">
         <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
-            <span>Painting Hero...</span>
+            <span>Painting Masterpiece...</span>
             <span>{generationProgress}%</span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -189,7 +196,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
     <div className="max-w-5xl mx-auto">
       <div className="text-center mb-10">
         <h2 className="text-4xl font-bold text-slate-800 mb-2 font-fantasy">Storybook Creator 📚</h2>
-        <p className="text-slate-500 text-lg">Every page features the same hero—your child!</p>
+        <p className="text-slate-500 text-lg">Consistent characters for every adventure.</p>
       </div>
 
        <div className="flex justify-center mb-12">
@@ -215,12 +222,12 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
 
       {step === 1 && (
         <div className="glass-card rounded-[2rem] p-12 text-center animate-fade-in max-w-2xl mx-auto">
-           <h3 className="text-2xl font-bold text-slate-700 mb-6">Step 1: The Face of the Hero</h3>
+           <h3 className="text-2xl font-bold text-slate-700 mb-6">Step 1: Choose Your Hero</h3>
            <div className="border-4 border-dashed border-amber-200 rounded-3xl p-16 hover:bg-amber-50/50 hover:border-amber-400 transition-all cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}>
              <div className="text-6xl mb-6 group-hover:scale-110 transition-transform">📸</div>
              <p className="text-slate-500 font-medium text-lg">Upload your child's photo</p>
-             <p className="text-slate-400 text-sm mt-2">We use this to keep their face identical on every page.</p>
+             <p className="text-slate-400 text-sm mt-2">The AI uses this photo for the cover and internal pages.</p>
              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
            </div>
         </div>
@@ -229,10 +236,10 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
       {step === 2 && (
         <div className="glass-card rounded-[2rem] p-8 md:p-12 animate-fade-in max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
-             <h3 className="text-2xl font-bold text-slate-800 font-fantasy">Step 2: Adventure Details</h3>
+             <h3 className="text-2xl font-bold text-slate-800 font-fantasy">Step 2: Book Details</h3>
              {imagePreview && (
                  <div className="relative">
-                     <img src={imagePreview} alt="Upload" className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md" />
+                     <img src={imagePreview} alt="Hero" className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md" />
                  </div>
              )}
             </div>
@@ -240,7 +247,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
             <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hero's Name</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Child's Name</label>
                       <input
                         type="text"
                         value={name}
@@ -250,7 +257,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                       />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Cover Style</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Cover Design</label>
                         <div className="grid grid-cols-2 gap-2">
                             <button 
                                 onClick={() => setCoverStyle('COLORFUL')}
@@ -271,19 +278,19 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                            Physical Description
+                            Physical Traits
                         </label>
                         <input
                             type="text"
                             value={childDescription}
                             onChange={(e) => setChildDescription(e.target.value)}
                             className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-base transition-all"
-                            placeholder="e.g. Ponytail, curly hair, glasses..."
+                            placeholder="e.g. Long braids, blue eyes..."
                         />
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                            Complexion Setting
+                            Skin Tone Setting
                         </label>
                         <select 
                             value={skinTone}
@@ -291,7 +298,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                             className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-base transition-all appearance-none"
                         >
                             <option value="">Auto (Match Photo)</option>
-                            <option value="Fair Warm Ivory / Golden-Light">Fair Warm Ivory / Golden-Light</option>
+                            <option value="Fair Warm Ivory / Golden-Fair">Fair Warm Ivory / Golden-Fair</option>
                             <option value="Light Honey-Mixed">Light Honey-Mixed</option>
                             <option value="Warm Sand / Tan">Warm Sand / Tan</option>
                             <option value="Toasted Caramel">Toasted Caramel</option>
@@ -300,14 +307,14 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                     </div>
                 </div>
                 
-                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                    <p className="text-xs text-indigo-800 leading-relaxed">
-                        ✨ <strong>Face Consistency:</strong> The AI uses your photo to keep the hero's face identical across the whole story. For best results, use a clear headshot!
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                        ✨ <strong>Cover Likeness:</strong> The AI uses your photo to ensure the cover features an identical likeness of {name || 'your child'}. If they have specific features like glasses, add them in "Physical Traits".
                     </p>
                 </div>
 
                 <div>
-                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Age Group</label>
+                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Target Age</label>
                    <div className="grid grid-cols-3 gap-4">
                        {ageOptions.map(option => (
                            <button
@@ -325,12 +332,12 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Adventure Theme</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">What happens in the story?</label>
                   <textarea
                     value={theme}
                     onChange={(e) => setTheme(e.target.value)}
                     className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none h-32 text-lg transition-all"
-                    placeholder="e.g. A magical trip to a dinosaur island..."
+                    placeholder="e.g. An adventure in a giant treehouse..."
                   />
                 </div>
                 
@@ -343,7 +350,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                             isGenerating || !name || !theme ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:shadow-xl hover:-translate-y-1'
                         }`}
                     >
-                        {isGenerating ? 'Weaving Story... ✍️' : 'Start My Adventure! 📖'}
+                        {isGenerating ? 'Drafting Story... ✍️' : 'Create My Story! 📖'}
                     </button>
                 </div>
             </div>
@@ -356,7 +363,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                  <div className="glass-card rounded-[2rem] p-20 flex flex-col items-center justify-center text-center">
                      <div className="text-6xl animate-bounce mb-6">✍️</div>
                      <h3 className="text-3xl font-bold text-slate-800 font-fantasy mb-2">Writing your story...</h3>
-                     <p className="text-slate-500">Crafting a magical consistent world for {name}!</p>
+                     <p className="text-slate-500">We're weaving a consistent adventure for {name}!</p>
                  </div>
              ) : (
                 <div className="glass-card rounded-[2rem] shadow-2xl overflow-hidden min-h-[600px] flex flex-col border border-amber-100/50">
@@ -372,12 +379,12 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
                                 ) : (
                                     <div className="relative w-80 h-80 md:w-96 md:h-96 bg-white rounded-xl shadow-inner flex flex-col items-center justify-center">
                                          <div className="text-5xl mb-2 animate-bounce">{coverStyle === 'COLORING' ? '✏️' : '🎨'}</div>
-                                         <p className="text-amber-400 font-bold mb-2">Creating Hero Cover...</p>
+                                         <p className="text-amber-400 font-bold mb-2">Painting Cover Likeness...</p>
                                          {renderProgressBar()}
                                     </div>
                                 )}
                              </div>
-                             <p className="text-amber-800/60 font-serif-story italic text-lg">A magical book about {name}</p>
+                             <p className="text-amber-800/60 font-serif-story italic text-lg">A magical adventure with {name}</p>
                         </div>
                     ) : (
                         <div className="flex flex-col lg:flex-row flex-grow">
