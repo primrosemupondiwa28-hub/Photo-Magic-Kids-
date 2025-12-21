@@ -1,13 +1,10 @@
+
 import React, { useState, useRef } from 'react';
-// Fix: Use hasApiKey instead of getStoredApiKey
-import { generateColoringPage, generateIllustration, hasApiKey } from '../services/gemini';
+// Remove hasApiKey as the API key is handled externally via process.env.API_KEY
+import { generateColoringPage, generateIllustration } from '../services/gemini';
 import { AgeGroup } from '../types';
 
-interface ColoringBookProps {
-    onOpenSettings: () => void;
-}
-
-const ColoringBook: React.FC<ColoringBookProps> = ({ onOpenSettings }) => {
+const ColoringBook: React.FC = () => {
   const [step, setStep] = useState(1);
   const [childName, setChildName] = useState('');
   const [ageGroup, setAgeGroup] = useState<AgeGroup>(AgeGroup.PRESCHOOL);
@@ -39,13 +36,7 @@ const ColoringBook: React.FC<ColoringBookProps> = ({ onOpenSettings }) => {
   const handleGenerateBook = async () => {
     if (!themePrompt || !imagePreview) return;
     
-    // Fix: Check API Key using hasApiKey and await the response
-    const keySet = await hasApiKey();
-    if (!keySet) {
-        onOpenSettings();
-        return;
-    }
-
+    // Remove API key check as per guidelines: availability is handled externally
     setIsGenerating(true);
     setGeneratedPages([]);
     
@@ -256,7 +247,7 @@ const ColoringBook: React.FC<ColoringBookProps> = ({ onOpenSettings }) => {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {generatedPages.map((pageUrl, index) => (
-                      <div key={index} className="bg-white p-4 rounded-[2rem] shadow-xl border border-slate-100 animate-slide-up">
+                      <div key={index} className="bg-white p-4 rounded-[2.5rem] shadow-xl border border-slate-100 animate-slide-up">
                           <p className={`text-center font-bold mb-2 text-sm ${index === 0 ? 'text-pink-600 uppercase tracking-widest' : 'text-slate-400'}`}>
                               {index === 0 ? '✨ Cover Page ✨' : `Page ${index}`}
                           </p>
@@ -274,7 +265,7 @@ const ColoringBook: React.FC<ColoringBookProps> = ({ onOpenSettings }) => {
                   ))}
                   
                   {isGenerating && generatedPages.length < 3 && (
-                      <div className="bg-slate-50 p-4 rounded-[2rem] border-2 border-dashed border-slate-300 flex items-center justify-center aspect-[3/4]">
+                      <div className="bg-slate-50 p-4 rounded-[2.5rem] border-2 border-dashed border-slate-300 flex items-center justify-center aspect-[3/4]">
                           <div className="text-center">
                               <div className="text-4xl mb-2 animate-bounce">✏️</div>
                               <p className="text-slate-400 font-bold">Drawing next page...</p>

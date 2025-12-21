@@ -1,24 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StoryPage } from "../types";
 
-// Helper to check if a key is available
-export const hasApiKey = async (): Promise<boolean> => {
-  if (typeof window !== 'undefined' && (window as any).aistudio?.hasSelectedApiKey) {
-    return await (window as any).aistudio.hasSelectedApiKey();
-  }
-  return !!process.env.API_KEY;
-};
-
-// Helper to open the selection dialog
-export const openKeySelector = async () => {
-  if (typeof window !== 'undefined' && (window as any).aistudio?.openSelectKey) {
-    await (window as any).aistudio.openSelectKey();
-    // After triggering, we proceed assuming success as per guidelines
-    return true;
-  }
-  return false;
-};
-
 export const generateMagicPhoto = async (
   base64Image: string,
   prompt: string,
@@ -28,14 +10,13 @@ export const generateMagicPhoto = async (
   
   const enhancedPrompt = `${prompt}
   
-  STRICT IDENTITY PROTOCOL (MANDATORY):
-  1. ABSOLUTE FACE MATCH: The generated child MUST be a 1:1 likeness of the child in the reference photo. 
-  2. HAIR CONSISTENCY: Match the EXACT length, texture, and style of the hair in the photo. 
-  3. SKIN TONE LOCK: Use the EXACT luminosity from the photo's highlights. Maintain the fair/light complexion.
-  4. RECOGNIZABILITY: The child must be instantly recognizable as the specific individual in the source photo.`;
+  STRICT IDENTITY PROTOCOL (FLASH):
+  1. ABSOLUTE FACE MATCH: The child must look exactly like the reference photo.
+  2. CHARACTER CONSISTENCY: Maintain facial features, hair texture, and skin tone.
+  3. CLEAR ARTISTRY: Create a high-quality transformation while keeping the child's identity clear.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-image-preview',
+    model: 'gemini-2.5-flash-image',
     contents: {
       parts: [
         { text: enhancedPrompt },
@@ -43,7 +24,9 @@ export const generateMagicPhoto = async (
       ]
     },
     config: {
-      imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+      imageConfig: { 
+        aspectRatio: "1:1"
+      }
     }
   });
 
@@ -54,7 +37,6 @@ export const generateMagicPhoto = async (
       }
     }
   }
-  
   throw new Error("No image generated.");
 };
 
@@ -64,7 +46,7 @@ export const generateStory = async (
   theme: string
 ): Promise<StoryPage[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const prompt = `Write a children's story for a ${ageGroup} named ${name}. Theme: ${theme}. 6 pages. Return JSON.`;
+  const prompt = `Write a creative 6-page children's story for a ${ageGroup} named ${name}. Theme: ${theme}. Return JSON with "text" and "illustrationPrompt" for each page.`;
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -98,17 +80,12 @@ export const generateIllustration = async (
 ): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  let fullPrompt = `High-quality 2D digital illustration for a children's book. 
-  
-  CHARACTER IDENTITY ANCHOR:
-  - This is the SPECIFIC child in the attached photo. 
-  - CONSISTENCY: Face, hair, and skin tone MUST be identical to the photo.
-  - STYLE: Vibrant, clean 2D children's book style.
-
-  SCENE: ${prompt}`;
+  let fullPrompt = `Children's book illustration. Style: Vibrant 2D digital art. 
+  SCENE: ${prompt}
+  CHARACTER IDENTITY: The main character must match the child in the photo exactly.`;
 
   if (appearanceDescription) {
-      fullPrompt += `\n\nUSER-SPECIFIED CONSTANTS: ${appearanceDescription}`;
+      fullPrompt += ` Appearance notes: ${appearanceDescription}`;
   }
 
   const parts: any[] = [{ text: fullPrompt }];
@@ -117,10 +94,12 @@ export const generateIllustration = async (
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-image-preview',
+    model: 'gemini-2.5-flash-image',
     contents: { parts: parts },
     config: {
-      imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+      imageConfig: { 
+        aspectRatio: "1:1"
+      }
     }
   });
 
@@ -141,8 +120,8 @@ export const generateColoringPage = async (
   appearanceDescription?: string
 ): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  let fullPrompt = `Clean black and white line art coloring page. Bold outlines, pure white background. ${prompt}`;
-  if (appearanceDescription) fullPrompt += ` Specific character features: ${appearanceDescription}.`;
+  let fullPrompt = `Black and white line art coloring page for kids. Bold outlines, clean white background, no shading. ${prompt}`;
+  if (appearanceDescription) fullPrompt += ` Character: ${appearanceDescription}.`;
   
   const parts: any[] = [{ text: fullPrompt }];
   if (base64Image) {
@@ -150,10 +129,12 @@ export const generateColoringPage = async (
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-image-preview',
+    model: 'gemini-2.5-flash-image',
     contents: { parts },
     config: {
-      imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+      imageConfig: { 
+        aspectRatio: "1:1"
+      }
     }
   });
 
@@ -174,11 +155,11 @@ export const generateSticker = async (
     appearanceDescription?: string
   ): Promise<string> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    let fullPrompt = `Die-cut sticker on white background. Style: ${prompt}.`;
-    if (appearanceDescription) fullPrompt += `\nCharacter Description: ${appearanceDescription}`;
+    let fullPrompt = `Die-cut sticker style on pure white background with thick white border. ${prompt}.`;
+    if (appearanceDescription) fullPrompt += ` Character details: ${appearanceDescription}`;
   
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: 'gemini-2.5-flash-image',
       contents: {
         parts: [
           { text: fullPrompt },
@@ -186,7 +167,9 @@ export const generateSticker = async (
         ]
       },
       config: {
-        imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+        imageConfig: { 
+          aspectRatio: "1:1"
+        }
       }
     });
   

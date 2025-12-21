@@ -1,14 +1,11 @@
-import React, { useState, useRef } from 'react';
-// Fix: Use hasApiKey instead of getStoredApiKey
-import { generateSticker, hasApiKey } from '../services/gemini';
 
-interface StickersPuzzlesProps {
-    onOpenSettings: () => void;
-}
+import React, { useState, useRef } from 'react';
+// Remove hasApiKey as the API key is handled externally via process.env.API_KEY
+import { generateSticker } from '../services/gemini';
 
 type Tab = 'STICKERS' | 'PUZZLES';
 
-const StickersPuzzles: React.FC<StickersPuzzlesProps> = ({ onOpenSettings }) => {
+const StickersPuzzles: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('STICKERS');
 
   return (
@@ -39,12 +36,12 @@ const StickersPuzzles: React.FC<StickersPuzzlesProps> = ({ onOpenSettings }) => 
         </div>
       </div>
 
-      {activeTab === 'STICKERS' ? <StickerMaker onOpenSettings={onOpenSettings} /> : <PuzzleGame />}
+      {activeTab === 'STICKERS' ? <StickerMaker /> : <PuzzleGame />}
     </div>
   );
 };
 
-const StickerMaker: React.FC<{ onOpenSettings: () => void }> = ({ onOpenSettings }) => {
+const StickerMaker: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [style, setStyle] = useState('3D Avatar');
@@ -76,13 +73,7 @@ const StickerMaker: React.FC<{ onOpenSettings: () => void }> = ({ onOpenSettings
   const handleGenerate = async () => {
     if (!imagePreview) return;
     
-    // Fix: Check API Key using hasApiKey and await the response
-    const keySet = await hasApiKey();
-    if (!keySet) {
-        onOpenSettings();
-        return;
-    }
-
+    // Remove API key check as per guidelines: availability is handled externally
     setIsGenerating(true);
     try {
       const base64Data = imagePreview.split(',')[1];

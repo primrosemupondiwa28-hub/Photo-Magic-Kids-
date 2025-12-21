@@ -1,13 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { AgeGroup, StoryPage } from '../types';
-// Fix: Use hasApiKey instead of getStoredApiKey
-import { generateStory, generateIllustration, generateColoringPage, hasApiKey } from '../services/gemini';
+// Remove hasApiKey as the API key is handled externally via process.env.API_KEY
+import { generateStory, generateIllustration, generateColoringPage } from '../services/gemini';
 
-interface StoryCreatorProps {
-    onOpenSettings: () => void;
-}
-
-const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
+// Remove StoryCreatorProps interface since onOpenSettings is no longer needed
+const StoryCreator: React.FC = () => {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [ageGroup, setAgeGroup] = useState<AgeGroup>(AgeGroup.PRESCHOOL);
@@ -43,13 +41,7 @@ const StoryCreator: React.FC<StoryCreatorProps> = ({ onOpenSettings }) => {
   const handleCreate = async () => {
     if (!name || !theme) return;
 
-    // Fix: Check API Key using hasApiKey and await the response
-    const keySet = await hasApiKey();
-    if (!keySet) {
-        onOpenSettings();
-        return;
-    }
-
+    // Remove API key check as per guidelines: availability is handled externally
     setIsGenerating(true);
     setStory(null);
     setStep(3);
