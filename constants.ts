@@ -1,4 +1,4 @@
-import { Character, Ethnicity, ArtStyle, AgeGroup, Theme } from './types';
+import { Character, ArtStyle, AgeGroup, Theme } from './types';
 
 export const THEMES_DATA = [
   { id: Theme.CHRISTMAS, icon: '🎄', label: 'Christmas', description: 'Festive holiday magic' },
@@ -58,6 +58,5 @@ export const CHARACTER_POSES: Record<Character, string[]> = {
 };
 
 export const CHARACTERS_LIST = Object.values(Character);
-export const ETHNICITIES_LIST = Object.values(Ethnicity);
 export const ART_STYLES_LIST = Object.values(ArtStyle);
 export const AGE_GROUPS_LIST = Object.values(AgeGroup);

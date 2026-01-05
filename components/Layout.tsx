@@ -10,93 +10,95 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, currentView, setView }) => {
   const navItems = [
     { label: 'Home', view: AppView.HOME, icon: '🏰' },
-    { label: 'Photo Magic', view: AppView.PHOTO_MAGIC, icon: '✨' },
-    { label: 'Stories', view: AppView.STORY_CREATOR, icon: '📚' },
-    { label: 'Coloring', view: AppView.COLORING_BOOK, icon: '🎨' },
-    { label: 'Fun Zone', view: AppView.PUZZLES, icon: '🧩' },
+    { label: 'Studio', view: AppView.PHOTO_MAGIC, icon: '✨' },
+    { label: 'Library', view: AppView.STORY_CREATOR, icon: '📚' },
+    { label: 'Atelier', view: AppView.COLORING_BOOK, icon: '🎨' },
+    { label: 'Play', view: AppView.PUZZLES, icon: '🧩' },
   ];
 
   return (
-    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-indigo-50 via-purple-50 to-amber-50 text-slate-800 font-sans selection:bg-purple-200">
+    <div className="min-h-screen relative selection:bg-rose-100">
       
-      {/* Ambient Background */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-emerald-200/20 blur-[120px]"></div>
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-amber-200/20 blur-[120px]"></div>
-          <div className="absolute top-[40%] left-[40%] w-[40%] h-[40%] rounded-full bg-indigo-200/20 blur-[100px]"></div>
-      </div>
+      {/* Dynamic Background Blobs */}
+      <div className="magic-blob w-[500px] h-[500px] bg-rose-100 top-[-10%] left-[-10%]"></div>
+      <div className="magic-blob w-[600px] h-[600px] bg-amber-50 bottom-[-10%] right-[-10%]" style={{ animationDuration: '45s' }}></div>
+      <div className="magic-blob w-[400px] h-[400px] bg-red-50 top-[30%] right-[15%]" style={{ animationDelay: '-10s' }}></div>
 
       {/* Navbar */}
-      <nav className="sticky top-4 z-50 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="glass-panel rounded-2xl shadow-xl shadow-indigo-900/5 px-6 border border-white/60">
-          <div className="flex justify-between h-20 items-center">
-            <div className="flex-shrink-0 flex items-center cursor-pointer group" onClick={() => setView(AppView.HOME)}>
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-200 group-hover:scale-105 transition-transform mr-3">
-                 <span className="text-xl">✨</span>
-              </div>
-              <div>
-                 <h1 className="text-2xl font-bold text-slate-800 font-fantasy tracking-wide group-hover:text-emerald-600 transition-colors hidden sm:block">
-                  Photo Magic Kids
-                </h1>
-                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 sm:hidden">
-                  PMK
-                </h1>
-              </div>
+      <nav className="sticky top-6 z-50 max-w-6xl mx-auto px-4">
+        <div className="glass-panel rounded-[2rem] shadow-2xl px-8 py-4 flex justify-between items-center border border-white">
+          <div className="flex items-center space-x-4 cursor-pointer group" onClick={() => setView(AppView.HOME)}>
+            <div className="bg-gradient-to-br from-rose-600 to-red-700 text-white p-3 rounded-[1.25rem] shadow-xl shadow-rose-200/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+               <span className="text-2xl">🪄</span>
             </div>
-            
-            {/* Desktop Nav */}
-            <div className="hidden md:flex space-x-2">
-              {navItems.map((item) => (
-                <button
-                  key={item.view}
-                  onClick={() => setView(item.view)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
-                    currentView === item.view
-                      ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100'
-                      : 'text-slate-500 hover:bg-white/60 hover:text-emerald-600'
-                  }`}
-                >
-                  <span className="mr-2 opacity-90">{item.icon}</span> {item.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Right Side Status */}
-            <div className="flex items-center space-x-2 pl-4 border-l border-slate-100">
-               <div className="flex items-center space-x-2 px-4 py-2 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-100 shadow-sm text-sm font-bold">
-                   <span className="mr-2">🔓</span>
-                   <span className="hidden sm:inline">Magic Unlocked</span>
-               </div>
+            <div className="hidden sm:block">
+               <h1 className="text-2xl font-bold text-slate-800 font-fantasy tracking-tight group-hover:text-rose-700 transition-colors">
+                Magic Kids
+              </h1>
+              <span className="text-[10px] font-bold text-rose-600/60 uppercase tracking-[0.2em] leading-none">The Original Studio</span>
             </div>
           </div>
+          
+          {/* Nav Items */}
+          <div className="hidden md:flex items-center space-x-1 bg-slate-100/40 p-1.5 rounded-2xl border border-slate-200/40">
+            {navItems.map((item) => (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  currentView === item.view
+                    ? 'bg-white text-rose-700 shadow-md border border-rose-50'
+                    : 'text-slate-500 hover:text-rose-600 hover:bg-white/50'
+                }`}
+              >
+                <span className="mr-2 text-base">{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center space-x-3 pl-4 border-l border-slate-200">
+             <div className="text-right hidden sm:block">
+               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Studio Access</p>
+               <p className="text-sm font-bold text-rose-600">Premium Active</p>
+             </div>
+             <div className="w-11 h-11 rounded-[1rem] bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xl shadow-inner border border-white">
+                👦
+             </div>
+          </div>
         </div>
-        
-        {/* Mobile Nav Bar */}
-        <div className="md:hidden fixed bottom-4 left-4 right-4 glass-panel rounded-2xl shadow-2xl flex justify-around p-3 z-50 border border-white/80 backdrop-blur-xl">
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden mt-4 flex justify-around p-2 glass-panel rounded-[1.5rem] shadow-xl border border-white">
             {navItems.map((item) => (
                 <button
                   key={item.view}
                   onClick={() => setView(item.view)}
-                  className={`flex flex-col items-center p-2 rounded-xl transition-colors ${currentView === item.view ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-400'}`}
+                  className={`flex flex-col items-center p-3 rounded-2xl transition-all ${currentView === item.view ? 'text-rose-700 bg-rose-50' : 'text-slate-400'}`}
                 >
-                    <span className="text-xl mb-0.5 relative">{item.icon}</span>
-                    <span className="text-[10px] font-bold">{item.label}</span>
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-[9px] font-bold mt-1 uppercase tracking-tighter">{item.label}</span>
                 </button>
             ))}
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-32 md:pb-12 relative z-10">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 relative z-10 min-h-screen">
         {children}
       </main>
       
-      <footer className="hidden md:block text-center py-10 text-slate-400 text-sm relative z-10">
-        <div className="flex items-center justify-center space-x-3 mb-3">
-           <span className="h-px w-12 bg-emerald-200"></span>
-           <span className="font-fantasy text-emerald-600/60 text-lg">Magic Studio</span>
-           <span className="h-px w-12 bg-emerald-200"></span>
+      <footer className="max-w-6xl mx-auto px-8 py-20 text-center border-t border-rose-50 mt-20">
+        <div className="flex flex-col items-center space-y-6">
+           <div className="flex items-center space-x-4">
+             <div className="h-px w-12 bg-rose-100"></div>
+             <h3 className="font-fantasy text-3xl text-rose-800/20">Magic Kids Studio</h3>
+             <div className="h-px w-12 bg-rose-100"></div>
+           </div>
+           <p className="text-slate-400 text-sm font-medium tracking-wide max-w-md mx-auto leading-relaxed">
+             Crafting magical digital experiences for the next generation. 
+             Safe, high-performance, and powered by advanced Gemini AI.
+           </p>
         </div>
-        <p className="opacity-60 font-medium tracking-wide">Secure • Private • Free Creative Studio</p>
       </footer>
     </div>
   );

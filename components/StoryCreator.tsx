@@ -1,17 +1,13 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { AgeGroup, StoryPage } from '../types';
-// Remove hasApiKey as the API key is handled externally via process.env.API_KEY
 import { generateStory, generateIllustration, generateColoringPage } from '../services/gemini';
 
-// Remove StoryCreatorProps interface since onOpenSettings is no longer needed
 const StoryCreator: React.FC = () => {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [ageGroup, setAgeGroup] = useState<AgeGroup>(AgeGroup.PRESCHOOL);
   const [theme, setTheme] = useState('');
   const [childDescription, setChildDescription] = useState('');
-  const [skinTone, setSkinTone] = useState('');
   const [coverStyle, setCoverStyle] = useState<'COLORFUL' | 'COLORING'>('COLORFUL');
   
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -41,7 +37,6 @@ const StoryCreator: React.FC = () => {
   const handleCreate = async () => {
     if (!name || !theme) return;
 
-    // Remove API key check as per guidelines: availability is handled externally
     setIsGenerating(true);
     setStory(null);
     setStep(3);
@@ -87,17 +82,14 @@ const StoryCreator: React.FC = () => {
              mimeType = imagePreview.split(';')[0].split(':')[1];
         }
 
-        // Enhanced identity anchor specifically demanding cover-to-page consistency
-        const identityAnchor = `STRICT CHARACTER CONSISTENCY: This is the MAIN HERO. 
-        MATCH PHOTO 100%: Facial structure, eye shape, and nose must match the reference photo exactly.
-        HAIR LOCK: The hairstyle MUST be the exact length and texture as the photo. 
-        SKIN TONE: ${skinTone || 'Maintain fair/light complexion from photo highlights'}.
-        NOTES: ${childDescription}`;
+        const identityAnchor = `STRICT CHARACTER IDENTITY: This is the MAIN HERO. 
+        MANDATORY: You MUST preserve the exact skin tone and facial structure from the reference photo. 
+        NOTE: Do not use racial stereotypes. Features like "curly hair" are purely descriptive of texture and should not change the skin tone from the photo.
+        IDENTITY NOTES: ${childDescription}`;
 
         let image;
         if (index === 0) {
-            // Specialized logic for the cover (Page 0)
-            const coverLikenessPrompt = `BOOK COVER MASTERPIECE: ${prompt}. The central character MUST have an absolute face match to the provided photo.`;
+            const coverLikenessPrompt = `BOOK COVER MASTERPIECE: ${prompt}. The central character MUST have an absolute face and skin tone match to the provided photo.`;
             
             if (coverStyle === 'COLORING') {
                 const coloringPrompt = `COVER COLORING PAGE: ${coverLikenessPrompt}. Bold black outlines, pure white background, ready to be colored.`;
@@ -107,7 +99,6 @@ const StoryCreator: React.FC = () => {
                 image = await generateIllustration(colorfulPrompt, base64Data, mimeType, identityAnchor);
             }
         } else {
-            // Standard internal story pages
             image = await generateIllustration(prompt, base64Data, mimeType, identityAnchor);
         }
         
@@ -160,7 +151,6 @@ const StoryCreator: React.FC = () => {
     setName('');
     setTheme('');
     setChildDescription('');
-    setSkinTone('');
     setCoverStyle('COLORFUL');
     setImageFile(null);
     setImagePreview(null);
@@ -270,41 +260,23 @@ const StoryCreator: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                            Physical Traits
-                        </label>
-                        <input
-                            type="text"
-                            value={childDescription}
-                            onChange={(e) => setChildDescription(e.target.value)}
-                            className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-base transition-all"
-                            placeholder="e.g. Long braids, blue eyes..."
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                            Skin Tone Setting
-                        </label>
-                        <select 
-                            value={skinTone}
-                            onChange={(e) => setSkinTone(e.target.value)}
-                            className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-base transition-all appearance-none"
-                        >
-                            <option value="">Auto (Match Photo)</option>
-                            <option value="Fair Warm Ivory / Golden-Fair">Fair Warm Ivory / Golden-Fair</option>
-                            <option value="Light Honey-Mixed">Light Honey-Mixed</option>
-                            <option value="Warm Sand / Tan">Warm Sand / Tan</option>
-                            <option value="Toasted Caramel">Toasted Caramel</option>
-                            <option value="Deep Cocoa">Deep Cocoa</option>
-                        </select>
-                    </div>
+                <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        Special Traits
+                    </label>
+                    <input
+                        type="text"
+                        value={childDescription}
+                        onChange={(e) => setChildDescription(e.target.value)}
+                        className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-base transition-all"
+                        placeholder="e.g. Blue glasses, loves dragons..."
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 italic">Note: The AI automatically preserves skin tone and facial features from your photo.</p>
                 </div>
                 
                 <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
                     <p className="text-xs text-amber-800 leading-relaxed">
-                        ✨ <strong>Cover Likeness:</strong> The AI uses your photo to ensure the cover features an identical likeness of {name || 'your child'}. If they have specific features like glasses, add them in "Physical Traits".
+                        ✨ <strong>Hero Likeness:</strong> The studio uses your photo to ensure every page features an identical likeness. No racial biases—just a perfect match of {name || 'your child'}'s unique features.
                     </p>
                 </div>
 

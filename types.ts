@@ -39,16 +39,6 @@ export enum Character {
   PAW_PATROL = 'Paw Patrol'
 }
 
-export enum Ethnicity {
-  CLASSIC = 'Classic / Traditional',
-  AFRICAN_AMERICAN = 'African American',
-  ASIAN = 'Asian',
-  HISPANIC = 'Hispanic',
-  BIRACIAL = 'Biracial / Mixed',
-  INDIAN = 'Indian / South Asian',
-  MIDDLE_EASTERN = 'Middle Eastern'
-}
-
 export enum ArtStyle {
   REALISTIC = 'Natural/Realistic',
   VINTAGE = 'Vintage 1950s',
