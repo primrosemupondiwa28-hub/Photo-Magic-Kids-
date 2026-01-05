@@ -25,7 +25,6 @@
         font-family: 'Merriweather', serif;
       }
       
-      /* Premium Ruby Glassmorphism */
       .glass-panel {
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(20px);
@@ -47,7 +46,6 @@
         border-color: rgba(225, 29, 72, 0.2);
       }
 
-      /* Premium Background Blobs */
       .magic-blob {
         position: fixed;
         border-radius: 50%;
@@ -69,24 +67,19 @@
         0%, 100% { transform: translateY(0px) rotate(0deg); }
         50% { transform: translateY(-15px) rotate(1deg); }
       }
-
-      .magic-glow {
-        box-shadow: 0 0 20px rgba(225, 29, 72, 0.2);
-      }
-      .magic-glow:hover {
-        box-shadow: 0 0 40px rgba(225, 29, 72, 0.4);
-      }
     </style>
     <script type="importmap">
-    {
-      "imports": {
-        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-        "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-        "react/": "https://esm.sh/react@^19.2.3/",
-        "react": "https://esm.sh/react@^19.2.3"
-      }
-    }
-    </script>
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@1.33.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
   </head>
   <body>
     <div id="root"></div>

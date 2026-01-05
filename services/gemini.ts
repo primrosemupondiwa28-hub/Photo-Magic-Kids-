@@ -1,18 +1,55 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StoryPage } from "../types";
 
+// Safety Settings for Kids App
+const safetySettings = [
+  { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_LOW_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+];
+
 /**
- * ABSOLUTE IDENTITY & CHROMATIC FIDELITY PROTOCOL (v3.0)
- * This protocol is designed to eliminate racial hallucinations and protect the 
- * specific identity of multiracial, biracial, and light-skinned children.
+ * Helper to get the AI client using the environment key.
+ * This prevents the "API Key must be set" browser error by checking 
+ * the existence of the key before instantiation.
  */
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey || apiKey === "") {
+    console.error("Critical: API_KEY is missing from the environment.");
+    throw new Error("The Magic Studio is having a little nap. Please try again in a moment!");
+  }
+  return new GoogleGenAI({ apiKey });
+};
+
+/**
+ * DAILY QUOTA GUARD
+ * Simulates backend rate limiting/daily caps
+ */
+const checkQuota = () => {
+  const today = new Date().toDateString();
+  const usageData = JSON.parse(localStorage.getItem('pmk_usage') || '{}');
+  
+  if (usageData.date !== today) {
+    usageData.date = today;
+    usageData.count = 0;
+  }
+
+  const DAILY_LIMIT = 20;
+  if (usageData.count >= DAILY_LIMIT) {
+    throw new Error("Daily magic limit reached! Come back tomorrow for more adventures.");
+  }
+
+  usageData.count += 1;
+  localStorage.setItem('pmk_usage', JSON.stringify(usageData));
+};
+
 const IDENTITY_LOCK = `
-CRITICAL IDENTITY & CHROMATIC FIDELITY LOCK:
-1. PIXEL-MIRROR SKIN TONE: You MUST treat the reference photo's skin as the ABSOLUTE visual truth. Analyze the exact RGB/Luminosity levels. If the child in the photo is light-skinned (e.g., biracial, multiracial), the output MUST be identically light-skinned. Do NOT darken the complexion. Do NOT apply "Black" or "White" archetypes; capture the "in-between" nuances perfectly.
-2. NEUTRAL TRAIT INTERPRETATION: Terms like "curly hair," "braids," "pigtails," or "full lips" are GEOMETRIC TEXTURES only. They are NOT racial markers. You are strictly forbidden from changing the skin tone or facial structure of the child because of these descriptors. 
-3. FACIAL ANCHORING: Maintain the specific facial structure, eye shape, nose bridge, and lip shape of the child in the photo. The result must be a 1:1 character likeness.
-4. ANTI-STEREOTYPE BIAS: Ignore all internal "diversity presets" or statistical biases. If the user says "curly hair," do NOT default to a Black child if the photo shows a light-skinned biracial child. 
-5. MULTIRACIAL PROTECTIONS: Specifically preserve the unique skin tone of biracial children who have light complexions. 
+CRITICAL IDENTITY LOCK:
+Treat the reference photo as absolute visual truth. Preserve skin tone, facial structure, and identity exactly as seen.
+Terms like "curly hair" are texture descriptors only and must not trigger skin tone shifts.
+Zero racial bias. Match the subject's identity as a 1:1 twin.
 `;
 
 export const generateMagicPhoto = async (
@@ -20,14 +57,10 @@ export const generateMagicPhoto = async (
   prompt: string,
   mimeType: string = 'image/jpeg'
 ): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  checkQuota();
+  const ai = getAIClient();
   
-  const enhancedPrompt = `
-  ${IDENTITY_LOCK}
-  TASK: Create a photorealistic artpiece.
-  SCENE: ${prompt}
-  MANDATORY: The subject in the output MUST be an identical twin of the child in the photo. Match the exact light-skinned biracial complexion and facial identity. No racial shifting.
-  `;
+  const enhancedPrompt = `${IDENTITY_LOCK}\nSCENE: ${prompt}`;
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
@@ -38,18 +71,14 @@ export const generateMagicPhoto = async (
       ]
     },
     config: {
-      imageConfig: { aspectRatio: "1:1" }
+      imageConfig: { aspectRatio: "1:1" },
+      safetySettings
     }
   });
 
-  if (response.candidates?.[0]?.content?.parts) {
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData?.data) {
-        return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
-      }
-    }
-  }
-  throw new Error("No image generated.");
+  const part = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+  if (!part?.inlineData?.data) throw new Error("The magic didn't work this time.");
+  return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
 };
 
 export const generateStory = async (
@@ -57,11 +86,12 @@ export const generateStory = async (
   ageGroup: string,
   theme: string
 ): Promise<StoryPage[]> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  checkQuota();
+  const ai = getAIClient();
   const prompt = `Write a creative 6-page children's story for a ${ageGroup} named ${name}. Theme: ${theme}. Return JSON with "text" and "illustrationPrompt" for each page.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.5-flash',
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -75,13 +105,13 @@ export const generateStory = async (
           },
           required: ["text", "illustrationPrompt"]
         }
-      }
+      },
+      safetySettings
     }
   });
 
-  const text = response.text;
-  if (!text) throw new Error("No story generated");
-  return JSON.parse(text) as StoryPage[];
+  if (!response.text) throw new Error("The storyteller is sleeping.");
+  return JSON.parse(response.text) as StoryPage[];
 };
 
 export const generateIllustration = async (
@@ -90,40 +120,27 @@ export const generateIllustration = async (
   mimeType: string = 'image/jpeg',
   appearanceDescription?: string
 ): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  checkQuota();
+  const ai = getAIClient();
   
-  let fullPrompt = `
-  ${IDENTITY_LOCK}
-  STYLE: Premium 2D children's book digital art.
-  SCENE: ${prompt}
-  FIDELITY: The character MUST match the photo's identity exactly, especially the specific light skin tone and facial features.
-  `;
-
-  if (appearanceDescription) {
-      fullPrompt += `\nSTYLE NOTES: ${appearanceDescription}. (CRITICAL: These are for outfit/hair texture ONLY. They must never trigger a racial shift or skin tone change from the photo).`;
-  }
+  let fullPrompt = `${IDENTITY_LOCK}\nSTYLE: Premium 2D children's book digital art.\nSCENE: ${prompt}`;
+  if (appearanceDescription) fullPrompt += `\nSTYLE NOTES: ${appearanceDescription}`;
 
   const parts: any[] = [{ text: fullPrompt }];
-  if (base64Image) {
-    parts.push({ inlineData: { mimeType, data: base64Image } });
-  }
+  if (base64Image) parts.push({ inlineData: { mimeType, data: base64Image } });
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
-    contents: { parts: parts },
+    contents: { parts },
     config: {
-      imageConfig: { aspectRatio: "1:1" }
+      imageConfig: { aspectRatio: "1:1" },
+      safetySettings
     }
   });
 
-  if (response.candidates?.[0]?.content?.parts) {
-    for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData?.data) {
-            return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
-        }
-    }
-  }
-  throw new Error("Failed to generate illustration");
+  const part = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+  if (!part?.inlineData?.data) throw new Error("Failed to paint illustration.");
+  return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
 };
 
 export const generateColoringPage = async (
@@ -132,74 +149,54 @@ export const generateColoringPage = async (
   mimeType: string = 'image/jpeg',
   appearanceDescription?: string
 ): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  let fullPrompt = `
-  ${IDENTITY_LOCK}
-  STYLE: Clean line art coloring page. Bold outlines, white background.
-  IDENTITY MATCH: Draw the child with the exact facial features and proportions of the person in the photo.
-  `;
-  
-  if (appearanceDescription) fullPrompt += `\nNOTES: ${appearanceDescription}.`;
+  checkQuota();
+  const ai = getAIClient();
+  let fullPrompt = `${IDENTITY_LOCK}\nSTYLE: Clean line art coloring page. Bold outlines, white background.\nSCENE: ${prompt}`;
+  if (appearanceDescription) fullPrompt += `\nNOTES: ${appearanceDescription}`;
   
   const parts: any[] = [{ text: fullPrompt }];
-  if (base64Image) {
-    parts.push({ inlineData: { mimeType, data: base64Image } });
-  }
+  if (base64Image) parts.push({ inlineData: { mimeType, data: base64Image } });
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: { parts },
     config: {
-      imageConfig: { aspectRatio: "1:1" }
+      imageConfig: { aspectRatio: "1:1" },
+      safetySettings
     }
   });
 
-  if (response.candidates?.[0]?.content?.parts) {
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData?.data) {
-        return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
-      }
-    }
-  }
-  throw new Error("No coloring page generated.");
+  const part = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+  if (!part?.inlineData?.data) throw new Error("No coloring page generated.");
+  return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
 };
 
 export const generateSticker = async (
-    base64Image: string,
-    prompt: string,
-    mimeType: string = 'image/jpeg',
-    appearanceDescription?: string
-  ): Promise<string> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    let fullPrompt = `
-    ${IDENTITY_LOCK}
-    STYLE: Die-cut sticker, white border, white background.
-    VIBE: ${prompt}.
-    MANDATORY FIDELITY: The character in the sticker MUST be an identical visual match to the reference photo. 
-    SKIN TONE ALERT: The child in the photo is light-skinned biracial. You MUST sample the exact light skin tone. Do NOT default to a darker skin tone just because of hair descriptions.
-    `;
-    
-    if (appearanceDescription) fullPrompt += `\nSPECIFIC DETAILS: ${appearanceDescription}`;
-  
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [
-          { text: fullPrompt },
-          { inlineData: { mimeType, data: base64Image } }
-        ]
-      },
-      config: {
-        imageConfig: { aspectRatio: "1:1" }
-      }
-    });
-  
-    if (response.candidates?.[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData?.data) {
-          return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
-        }
-      }
+  base64Image: string,
+  prompt: string,
+  mimeType: string = 'image/jpeg',
+  appearanceDescription?: string
+): Promise<string> => {
+  checkQuota();
+  const ai = getAIClient();
+  let fullPrompt = `${IDENTITY_LOCK}\nSTYLE: Die-cut sticker, white border, white background.\nVIBE: ${prompt}`;
+  if (appearanceDescription) fullPrompt += `\nSPECIFIC DETAILS: ${appearanceDescription}`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-image',
+    contents: {
+      parts: [
+        { text: fullPrompt },
+        { inlineData: { mimeType, data: base64Image } }
+      ]
+    },
+    config: {
+      imageConfig: { aspectRatio: "1:1" },
+      safetySettings
     }
-    throw new Error("No sticker generated.");
-  };
+  });
+
+  const part = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+  if (!part?.inlineData?.data) throw new Error("No sticker generated.");
+  return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+};

@@ -2,7 +2,6 @@
   "name": "Photo Magic Kids",
   "description": "A magical AI-powered photo transformation and story creation app for children.",
   "requestFramePermissions": [
-    "camera",
-    "microphone"
+    "camera"
   ]
 }

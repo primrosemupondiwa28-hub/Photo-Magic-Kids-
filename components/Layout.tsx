@@ -60,7 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentView, setView }) => {
           <div className="flex items-center space-x-3 pl-4 border-l border-slate-200">
              <div className="text-right hidden sm:block">
                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Studio Access</p>
-               <p className="text-sm font-bold text-rose-600">Premium Active</p>
+               <p className="text-sm font-bold text-rose-600">Free Tier Active</p>
              </div>
              <div className="w-11 h-11 rounded-[1rem] bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xl shadow-inner border border-white">
                 👦
@@ -96,7 +96,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentView, setView }) => {
            </div>
            <p className="text-slate-400 text-sm font-medium tracking-wide max-w-md mx-auto leading-relaxed">
              Crafting magical digital experiences for the next generation. 
-             Safe, high-performance, and powered by advanced Gemini AI.
+             Safe, high-performance, and powered by Gemini 2.5 Flash AI.
            </p>
         </div>
       </footer>

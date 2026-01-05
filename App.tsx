@@ -22,7 +22,7 @@ const Home: React.FC<{
                 <div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white"></div>
             </div>
             <span className="text-sm font-bold text-slate-700 tracking-tight">
-                Now featuring <span className="text-rose-600">Gemini 3 Flash</span> Magic
+                Now featuring <span className="text-rose-600">Gemini 2.5 Flash</span> Magic
             </span>
         </div>
         
@@ -33,7 +33,7 @@ const Home: React.FC<{
         
         <p className="text-xl md:text-3xl text-slate-500 max-w-3xl mx-auto font-medium leading-relaxed px-4">
           Transform childhood moments into high-definition digital keepsakes. 
-          The world's most advanced AI playground for parents and kids.
+          The world's most accessible AI playground for families.
         </p>
 
         <div className="pt-8 flex justify-center items-center">
@@ -63,22 +63,22 @@ const Home: React.FC<{
               view: AppView.STORY_CREATOR, 
               title: "Legend Library", 
               desc: "Generate full children's books with your child as the star on every page.", 
-              icon: "🏺", 
-              accent: "📚 BESTSELLER"
+              icon: "📚", 
+              accent: "🏺 BESTSELLER"
             },
             { 
               view: AppView.COLORING_BOOK, 
               title: "Atelier Art", 
               desc: "Convert memories into stunning, high-contrast coloring collections.", 
-              icon: "🖋️", 
-              accent: "🎨 CREATIVE"
+              icon: "🎨", 
+              accent: "🖋️ CREATIVE"
             },
             { 
               view: AppView.PUZZLES, 
               title: "Fun Pavilion", 
               desc: "Custom stickers, puzzle games, and AI-driven play zones.", 
-              icon: "💠", 
-              accent: "🧩 PLAY"
+              icon: "🧩", 
+              accent: "💠 PLAY"
             }
         ].map((feature, idx) => (
             <div 
@@ -107,7 +107,6 @@ const Home: React.FC<{
                      </div>
                  </div>
                  
-                 {/* Aura Glow */}
                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-rose-50 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
         ))}
